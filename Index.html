@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chatbot OpenRouter</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#f2f2f2; padding:20px; }
+  #chat { border:1px solid #ccc; padding:10px; background:#fff; height:300px; overflow-y:auto; margin-bottom:10px; }
+  .msg-user { color:blue; margin:5px 0; }
+  .msg-bot { color:green; margin:5px 0; }
+</style>
+</head>
+<body>
+<h2>Chatbot com OpenRouter</h2>
+<div id="chat"></div>
+<input id="userInput" type="text" placeholder="Digite sua mensagem..." style="width:80%;" />
+<button onclick="sendMessage()">Enviar</button>
+
+<script>
+const API_KEY = "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"; // Cole sua chave aqui
+const API_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const message = input.value.trim();
+  if (!message) return;
+  
+  // Mostrar mensagem do usuário
+  addMessage('user', message);
+  input.value = '';
+
+  // Montar payload
+  const data = {
+    model: "openai/gpt-4o",
+    messages: [
+      { role: "user", content: message }
+    ],
+    max_tokens: 200,
+    temperature: 0.7
+  };
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      addMessage('bot', "Erro: " + errorText);
+      return;
+    }
+
+    const result = await response.json();
+    const botReply = result.choices[0].message.content;
+    addMessage('bot', botReply);
+  } catch (err) {
+    addMessage('bot', "Erro de rede: " + err.message);
+  }
+}
+
+function addMessage(role, text) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = role === 'user' ? 'msg-user' : 'msg-bot';
+  div.innerText = (role === 'user' ? "Você: " : "Bot: ") + text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+</script>
+</body>
+</html>
